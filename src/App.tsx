@@ -11,6 +11,9 @@ function App() {
 
 	return (
 		<div className="app-config">
+			<div>
+				need new JSON? Set count and press Generate button:
+			</div>
 			<div className="config-block">
 				Cards Count:
 				{' '}
@@ -20,7 +23,7 @@ function App() {
 					onChange={e => setCardsCount(Number(e.target.value))}
 				/>
 				<button
-					className="generate-json-button"
+					className="button"
 					type="button"
 					onClick={() => {
 						vScrollAPI.generateRandomData(cardsCount);
@@ -30,7 +33,13 @@ function App() {
 				</button>
 			</div>
 
+			<br />
+
 			<div className="config-block">
+				<div>
+					try to use search:
+				</div>
+				<br />
 				Search By Key:
 				{' '}
 				<input
@@ -50,6 +59,13 @@ function App() {
 					}}
 					type="text"
 				/>
+			</div>
+
+			<br />
+
+			<div className="config-block">
+				click to download edited JSON file:
+				<button className="button" type="button" onClick={() => vScrollAPI.saveJSONToFile()}>Save JSON</button>
 			</div>
 
 		</div>

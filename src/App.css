@@ -13,11 +13,13 @@
     margin: 12px 0;
 }
 
-.generate-json-button {
+.button {
     display: block;
     padding: 8px 16px;
-    background-color: white;
     cursor: pointer;
     width: 100%;
     margin: 4px 0 28px;
+    background-color: #4b6e4b;
+    font-weight: 900;
+    color: white;
 }
