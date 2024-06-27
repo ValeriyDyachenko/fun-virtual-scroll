@@ -1,0 +1,23 @@
+.app-config {
+    display: block;
+    position: fixed;
+    background-color: white;
+    opacity: 0.8;
+    padding: 24px;
+    top: 12px;
+    left: 12px;
+    border: #56e956 4px solid;
+}
+
+.config-block {
+    margin: 12px 0;
+}
+
+.generate-json-button {
+    display: block;
+    padding: 8px 16px;
+    background-color: white;
+    cursor: pointer;
+    width: 100%;
+    margin: 4px 0 28px;
+}
