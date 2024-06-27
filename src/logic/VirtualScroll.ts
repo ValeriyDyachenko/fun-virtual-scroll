@@ -4,7 +4,7 @@ import { AnimationManager } from './AnimationManager.ts';
 import { HTMLInputGenerator, InputGenerator } from './InputGenerator.ts';
 
 type JSONValues = number | string | boolean | Date
-type JSONItem = Record<string, JSONValues>
+type JSONItem = Record<string, JSONValues> & Record<symbol, number>
 type JSONData = JSONItem[]
 
 class VirtualScroll {
@@ -32,7 +32,7 @@ class VirtualScroll {
 
 	private totalHeight = 0;
 
-	private secretIdKey = '_id';
+	private secretIdKey: symbol;
 
 	private jsonGenerator: JSONGenerator;
 
@@ -58,14 +58,12 @@ class VirtualScroll {
 		this.searchEngine = searchEngine;
 		this.animationManager = animationManager;
 		this.inputGenerator = inputGenerator;
+		this.secretIdKey = this.jsonGenerator.getSecretId();
 		this.setScrollListeners();
 	}
 
 	public generateRandomData(count: number): void {
-		this.bigJsonObject = this.jsonGenerator.generateRandomData(count).map((item, index) => ({
-			...item,
-			[this.secretIdKey]: index,
-		}));
+		this.bigJsonObject = this.jsonGenerator.generateRandomData(count);
 		this.updateFilteredIndexes();
 		this.renderList();
 		this.insertFirefoxWorkaround();
@@ -126,7 +124,7 @@ class VirtualScroll {
 
 	private getItemHeight(item: JSONItem): number {
 		const visibleFieldsCount = Object.entries(item)
-			.filter(([key, value]) => key !== this.secretIdKey && this.searchEngine.fieldMatchesSearch(key, value))
+			.filter(([key, value]) => key as string | symbol !== this.secretIdKey && this.searchEngine.fieldMatchesSearch(key, value))
 			.length;
 		return visibleFieldsCount * this.fieldHeight;
 	}
@@ -206,7 +204,7 @@ class VirtualScroll {
 		listItem.className = 'list-item';
 		listItem.dataset.index = item[this.secretIdKey].toString();
 		listItem.innerHTML = Object.entries(item)
-			.filter(([key, value]) => key !== this.secretIdKey && this.searchEngine.fieldMatchesSearch(key, value))
+			.filter(([key, value]) => (key as string | symbol) !== this.secretIdKey && this.searchEngine.fieldMatchesSearch(key, value))
 			.map(([key, value], i) => {
 				return this.createField(key, value, key, item[this.secretIdKey] as number, i === 0);
 			}).join('');

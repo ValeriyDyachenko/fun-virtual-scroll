@@ -5,6 +5,10 @@ export type JSONData = JSONItem[]
 export class JSONGenerator {
 	private secretId = Symbol('id');
 
+	getSecretId() {
+		return this.secretId;
+	}
+
 	generateRandomData(count: number): JSONData {
 		return Array.from({ length: count }, (_, i) => ({
 			[this.secretId]: i,
