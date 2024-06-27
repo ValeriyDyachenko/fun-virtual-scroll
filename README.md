@@ -24,3 +24,5 @@ So if you generate a very big JSON with one million cards, for example - it will
 - Performance improvements, especially with enabled search, are possible. The current version is not fully optimized.
 
 - Developed for chrome
+
+- In Firefox, to save the input value, Enter should be pressed or focus should be lost. Saving doesn't work immediately when scrolling.
