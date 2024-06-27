@@ -35,14 +35,14 @@ body, html {
 }
 #list-container {
     position: relative;
-    padding: 20px;
     z-index: 1;
     max-width: 800px;
     margin: 0 auto;
     min-height: 100%; /* Добавим это свойство */
+    will-change: transform;
 }
 .list-item {
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255);
     margin-bottom: 10px;
     padding: 10px;
     border-radius: 5px;
@@ -51,6 +51,8 @@ body, html {
     left: 20px;
     right: 20px;
     overflow: hidden;
+    will-change: transform;
+    contain: layout style paint;
 }
 .field {
     height: 80px;
@@ -63,9 +65,9 @@ body, html {
 .field.group-start::before {
     content: " ";
     display: block;
-    border: 1px dotted #adaaaa;
+    border: 1px solid #e1e1e1;
     position: absolute;
-    top: 5px;
+    top: 16px;
     width: 99.5%;
     left: 0;
 }
@@ -112,4 +114,34 @@ body, html {
     pointer-events: none;
     max-width: 610px;
     transform: translate(200px);
+}
+
+#firefox-workaround {
+    height: 100vh;
+    position: fixed;
+    width: 800px;
+    background: white;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &::before {
+        content: "FOR BETTER ANIMATION EXPERIENCE USE CHROME BROWSER";
+        position: absolute;
+        text-transform: uppercase;
+        max-width: 80%;
+        line-height: 1.4;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        text-align: center;
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+    }
 }

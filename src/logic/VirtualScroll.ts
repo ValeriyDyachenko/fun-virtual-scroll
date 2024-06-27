@@ -68,6 +68,7 @@ class VirtualScroll {
 		}));
 		this.updateFilteredIndexes();
 		this.renderList();
+		this.insertFirefoxWorkaround();
 	}
 
 	public searchByKey(key: string): void {
@@ -285,6 +286,16 @@ class VirtualScroll {
 
 	private stopScrolling = (): void => {
 		this.isScrolling = false;
+	};
+
+	private insertFirefoxWorkaround = () => {
+		if (!document.getElementById('firefox-workaround')) {
+			const workaround = document.createElement('div');
+			workaround.id = 'firefox-workaround';
+			const vList = document.getElementById('v-list');
+			const listContainer = document.getElementById('list-container');
+			vList?.insertBefore?.(workaround, listContainer);
+		}
 	};
 }
 
