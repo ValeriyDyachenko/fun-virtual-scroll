@@ -1,30 +1,26 @@
-# React + TypeScript + Vite
+# Hello
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Here you can find a JS implementation of virtual-scroll.
 
-Currently, two official plugins are available:
+Made for fun. 
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The implementation is framework-agnostic; here it's used with React, but React is not necessary for it.
 
-## Expanding the ESLint configuration
+<img src="public/img.png" alt="virtual-scroll screen" title="virtual-scroll screen" style="max-width: 800px;">
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-- Configure the top-level `parserOptions` property like this:
+## HOW TO RUN
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```
+npm install
+npm run dev
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## ISSUES
+
+- I used standard browser scroll which has vertical size restrictions. 
+So if you generate a very big JSON with one million cards, for example - it will work, but the browser will not show the entire list.
+
+- Performance improvements, especially with enabled search, are possible. The current version is not fully optimized.
+
+- Developed for chrome
