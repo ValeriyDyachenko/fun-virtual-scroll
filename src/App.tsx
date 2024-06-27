@@ -1,6 +1,6 @@
-import { vScrollAPI } from './logic/v-scroll.ts';
 import './App.css';
 import { useState } from 'react';
+import { vScrollAPI } from './logic/VirtualScroll.ts';
 
 function App() {
 	const [cardsCount, setCardsCount] = useState(() => {
