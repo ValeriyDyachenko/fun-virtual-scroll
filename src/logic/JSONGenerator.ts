@@ -44,11 +44,8 @@ export class JSONGenerator {
 			if (Math.random() < 0.5) item[getRandomFieldName('hobby')] = hobbies[Math.floor(Math.random() * hobbies.length)];
 			if (Math.random() < 0.5) item[getRandomFieldName('height')] = Math.floor(Math.random() * 50) + 150;
 			if (Math.random() < 0.5) {
-				item[getRandomFieldName('longText')] =
-				`This is a long text field that contains more than 100 characters. 
-				It's used to test how the application handles large amounts of text. 
-				This sentence is just to make sure we exceed the 100 character limit.
-				`;
+				// eslint-disable-next-line max-len
+				item[getRandomFieldName('longText')] = 'This is a long text field that contains more than 100 characters. It\'s used to test how the application handles large amounts of text. This sentence is just to make sure we exceed the 100 character limit.';
 			}
 			if (Math.random() < 0.5) item[getRandomFieldName('favoriteNumber')] = Math.floor(Math.random() * 100);
 			if (Math.random() < 0.5) item[getRandomFieldName('isActiveUser')] = Math.random() < 0.5;
