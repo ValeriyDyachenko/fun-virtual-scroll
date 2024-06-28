@@ -1,5 +1,5 @@
 export interface InputGenerator {
-    createInput(field: string, value: unknown, itemIndex: number): string;
+    createInput(field: string, value: unknown, key: string): string;
 }
 
 export class HTMLInputGenerator implements InputGenerator {
@@ -28,7 +28,7 @@ export class HTMLInputGenerator implements InputGenerator {
 		return `${year}-${month}-${day}`;
 	}
 
-	createInput(field: string, value: unknown, itemIndex: number): string {
+	createInput(field: string, value: unknown, key: string): string {
 		if (field === 'id') {
 			return `<span>${value}</span>`;
 		} if (typeof value === 'string') {
@@ -46,8 +46,8 @@ export class HTMLInputGenerator implements InputGenerator {
 			return `<input type="date" value="${this.formatDate(value)}" data-type="date">`;
 		} if (typeof value === 'boolean') {
 			return `
-        <label><input type="radio" name="${field}_${itemIndex}" value="true" ${value ? 'checked' : ''} data-type="boolean"> True</label>
-        <label><input type="radio" name="${field}_${itemIndex}" value="false" ${value ? '' : 'checked'} data-type="boolean"> False</label>
+        <label><input type="radio" name="${field}_${key}" value="true" ${value ? 'checked' : ''} data-type="boolean"> True</label>
+        <label><input type="radio" name="${field}_${key}" value="false" ${value ? '' : 'checked'} data-type="boolean"> False</label>
       `;
 		}
 		return '';

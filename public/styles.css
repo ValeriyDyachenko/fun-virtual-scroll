@@ -116,32 +116,19 @@ body, html {
     transform: translate(200px);
 }
 
-#firefox-workaround {
-    height: 100vh;
-    position: fixed;
-    width: 800px;
-    background: white;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.virtual-scrollbar {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background-color: #f0f0f0;
+}
 
-    &::before {
-        content: "FOR BETTER ANIMATION EXPERIENCE USE CHROME BROWSER";
-        position: absolute;
-        text-transform: uppercase;
-        max-width: 80%;
-        line-height: 1.4;
-        font-family: Arial, sans-serif;
-        font-size: 24px;
-        font-weight: bold;
-        color: #333;
-        text-align: center;
-        padding: 20px;
-        background-color: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        border-radius: 5px;
-    }
+.virtual-scroll-thumb {
+    position: absolute;
+    width: 100%;
+    background-color: #bababa;
+    border-radius: 2px;
+    cursor: pointer;
 }

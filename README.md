@@ -18,11 +18,13 @@ npm run dev
 
 ## ISSUES
 
-- I used standard browser scroll which has vertical size restrictions. 
-So if you generate a very big JSON with one million cards, for example - it will work, but the browser will not show the entire list.
+- <s>I used standard browser scroll which has vertical size restrictions. 
+So if you generate a very big JSON with one million cards, for example - it will work, but the browser will not show the entire list.</s>
 
-- Performance improvements, especially with enabled search, are possible. The current version is not fully optimized.
+- <s>Performance improvements, especially with enabled search, are possible. The current version is not fully optimized.</s>
 
-- Developed for chrome
+- <s>Developed for chrome</s>
 
-- In Firefox, to save the input value, Enter should be pressed or focus should be lost. Saving doesn't work immediately when scrolling.
+- <s>In the FireFox during fast scrolling content are not rendered</s>
+
+- <s>In Firefox, to save the input value, Enter should be pressed or focus should be lost. Saving doesn't work immediately when scrolling.</s>
