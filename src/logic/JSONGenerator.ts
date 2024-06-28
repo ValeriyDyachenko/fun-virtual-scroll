@@ -36,12 +36,20 @@ export class JSONGenerator {
 			if (Math.random() < 0.5) item[getRandomFieldName('age')] = Math.floor(Math.random() * 50) + 20;
 			if (Math.random() < 0.5) item[getRandomFieldName('address')] = `${Math.floor(Math.random() * 1000)} Main St, City ${i + 1}`;
 			if (Math.random() < 0.5) item[getRandomFieldName('about')] = `This is a description about Person ${i + 1}.`;
+			// eslint-disable-next-line prefer-destructuring
 			if (Math.random() < 0.5) item[getRandomFieldName('registered')] = new Date(Date.now() - Math.random() * 157680000000).toISOString().split('T')[0];
 
+			// eslint-disable-next-line prefer-destructuring
 			if (Math.random() < 0.5) item[getRandomFieldName('favoriteDate')] = new Date(Date.now() - Math.random() * 3153600000000).toISOString().split('T')[0];
 			if (Math.random() < 0.5) item[getRandomFieldName('hobby')] = hobbies[Math.floor(Math.random() * hobbies.length)];
 			if (Math.random() < 0.5) item[getRandomFieldName('height')] = Math.floor(Math.random() * 50) + 150;
-			if (Math.random() < 0.5) item[getRandomFieldName('longText')] = 'This is a long text field that contains more than 100 characters. It\'s used to test how the application handles large amounts of text. This sentence is just to make sure we exceed the 100 character limit.';
+			if (Math.random() < 0.5) {
+				item[getRandomFieldName('longText')] =
+				`This is a long text field that contains more than 100 characters. 
+				It's used to test how the application handles large amounts of text. 
+				This sentence is just to make sure we exceed the 100 character limit.
+				`;
+			}
 			if (Math.random() < 0.5) item[getRandomFieldName('favoriteNumber')] = Math.floor(Math.random() * 100);
 			if (Math.random() < 0.5) item[getRandomFieldName('isActiveUser')] = Math.random() < 0.5;
 			if (Math.random() < 0.5) item[getRandomFieldName('hasPets')] = Math.random() < 0.5;
