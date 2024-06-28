@@ -11,11 +11,10 @@ function App() {
 
 	return (
 		<div className="app-config">
-			<div>
-				need new JSON? Set count and press Generate button:
-			</div>
+
 			<div className="config-block">
-				Cards Count:
+				<div>Set count and press Generate button</div>
+				<div>(card contains up to 15 random fields)</div>
 				{' '}
 				<input
 					type="number"
