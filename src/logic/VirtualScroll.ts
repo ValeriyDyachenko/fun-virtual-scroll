@@ -95,14 +95,15 @@ class VirtualScroll {
 		this.vList.addEventListener('DOMMouseScroll', this.handleFirefoxScroll, { passive: false });
 	}
 
-	public generateRandomData(count: number): void {
+	public async generateRandomData(count: number, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		this.destroy();
 		this.setScrollListeners();
 		this.setupVirtualScroll();
-		this.bigJsonObject = this.jsonGenerator.generateRandomData(count);
+		this.bigJsonObject = await this.jsonGenerator.generateRandomData(count, { beforeCallback: callbacks?.beforeCallback });
 		this.updateFilteredIndexes();
 		this.updateVirtualScroll();
 		this.renderList('up', 0);
+		callbacks?.afterCallback?.();
 	}
 
 	public searchByKey(key: string): void {
