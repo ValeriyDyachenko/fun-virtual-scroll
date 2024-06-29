@@ -4,14 +4,33 @@ import { vScrollAPI } from './logic/VirtualScroll.ts';
 
 function App() {
 	const [isWaiting, setIsWaiting] = useState(true);
+	const [isFilterBlocked, setIsFilterBlocked] = useState(false);
+	const [isJSONGenerationBlocked, setIsJSONGenerationBlocked] = useState(false);
 
-	const waitingCallbacks = {
-		beforeCallback: () => setIsWaiting(true),
-		afterCallback: () => setIsWaiting(false),
+	const waitingGeneratorCallbacks = {
+		beforeCallback: () => {
+			setIsWaiting(true);
+			setIsFilterBlocked(true);
+		},
+		afterCallback: () => {
+			setIsWaiting(false);
+			setIsFilterBlocked(false);
+		},
+	};
+
+	const waitingFilterCallbacks = {
+		beforeCallback: () => {
+			setIsWaiting(true);
+			setIsJSONGenerationBlocked(true);
+		},
+		afterCallback: () => {
+			setIsWaiting(false);
+			setIsJSONGenerationBlocked(false);
+		},
 	};
 
 	const generateJSONData = (initialCount: number) => {
-		vScrollAPI.generateRandomData(initialCount, waitingCallbacks);
+		vScrollAPI.generateRandomData(initialCount, waitingGeneratorCallbacks);
 	};
 
 	const [cardsCount, setCardsCount] = useState(() => {
@@ -43,6 +62,7 @@ function App() {
 						onClick={() => {
 							generateJSONData(cardsCount);
 						}}
+						disabled={isJSONGenerationBlocked}
 					>
 						Generate Random JSON
 					</button>
@@ -57,9 +77,10 @@ function App() {
 					{' '}
 					<input
 						onChange={(e) => {
-							vScrollAPI.searchByKey(e.target.value, waitingCallbacks);
+							vScrollAPI.searchByKey(e.target.value, waitingFilterCallbacks);
 						}}
 						type="text"
+						disabled={isFilterBlocked}
 					/>
 				</div>
 				<div className="config-block">
@@ -67,9 +88,10 @@ function App() {
 					{' '}
 					<input
 						onChange={(e) => {
-							vScrollAPI.searchByValue(e.target.value, waitingCallbacks);
+							vScrollAPI.searchByValue(e.target.value, waitingFilterCallbacks);
 						}}
 						type="text"
+						disabled={isFilterBlocked}
 					/>
 				</div>
 				<br />
