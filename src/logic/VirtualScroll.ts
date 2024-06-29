@@ -97,6 +97,7 @@ class VirtualScroll {
 		if (abortController.signal.aborted) return;
 
 		this.updateVirtualScroll();
+		this.updateBackgroundPosition();
 		this.renderList('up', 0);
 		callbacks?.afterCallback?.();
 	}
@@ -518,9 +519,11 @@ class VirtualScroll {
 			break;
 		case 'Home':
 			this.virtualScrollTop = 0;
+			this.updateBackgroundPosition();
 			break;
 		case 'End':
 			this.virtualScrollTop = this.virtualScrollHeight - this.vList.clientHeight;
+			this.updateBackgroundPosition();
 			break;
 		default:
 			return;
