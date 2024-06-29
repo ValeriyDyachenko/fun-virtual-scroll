@@ -5,11 +5,13 @@ import { vScrollAPI } from './logic/VirtualScroll.ts';
 function App() {
 	const [isWaiting, setIsWaiting] = useState(true);
 
+	const waitingCallbacks = {
+		beforeCallback: () => setIsWaiting(true),
+		afterCallback: () => setIsWaiting(false),
+	};
+
 	const generateJSONData = (initialCount: number) => {
-		vScrollAPI.generateRandomData(initialCount, {
-			beforeCallback: () => setIsWaiting(true),
-			afterCallback: () => setIsWaiting(false),
-		});
+		vScrollAPI.generateRandomData(initialCount, waitingCallbacks);
 	};
 
 	const [cardsCount, setCardsCount] = useState(() => {
@@ -50,7 +52,7 @@ function App() {
 					{' '}
 					<input
 						onChange={(e) => {
-							vScrollAPI.searchByKey(e.target.value);
+							vScrollAPI.searchByKey(e.target.value, waitingCallbacks);
 						}}
 						type="text"
 					/>
@@ -60,7 +62,7 @@ function App() {
 					{' '}
 					<input
 						onChange={(e) => {
-							vScrollAPI.searchByValue(e.target.value);
+							vScrollAPI.searchByValue(e.target.value, waitingCallbacks);
 						}}
 						type="text"
 					/>

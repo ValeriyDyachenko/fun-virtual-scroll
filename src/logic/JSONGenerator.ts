@@ -63,16 +63,15 @@ export class JSONGenerator {
 
 		return new Promise((resolve) => {
 			const task = () => {
+				makeNextChunk();
 				if (nextIndexForGenerate >= dataSize) {
 					callbacks?.afterCallback?.();
-					return resolve(data);
+					resolve(data);
+				} else {
+					requestAnimationFrame(task);
 				}
-				return requestAnimationFrame(() => {
-					makeNextChunk();
-					task();
-				});
 			};
-			task();
+			requestAnimationFrame(task);
 		});
 	}
 }

@@ -100,24 +100,26 @@ class VirtualScroll {
 		this.setScrollListeners();
 		this.setupVirtualScroll();
 		this.bigJsonObject = await this.jsonGenerator.generateRandomData(count, { beforeCallback: callbacks?.beforeCallback });
-		this.updateFilteredIndexes();
+		await this.updateFilteredIndexes();
 		this.updateVirtualScroll();
 		this.renderList('up', 0);
 		callbacks?.afterCallback?.();
 	}
 
-	public searchByKey(key: string): void {
+	public async searchByKey(key: string, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		this.searchEngine.searchByKey(key);
 		this.itemHeightCache.clear();
-		this.updateFilteredIndexes();
+		await this.updateFilteredIndexes({ beforeCallback: callbacks?.beforeCallback });
 		this.resetListAndRender();
+		callbacks?.afterCallback?.();
 	}
 
-	public searchByValue(value: string): void {
+	public async searchByValue(value: string, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		this.searchEngine.searchByValue(value);
 		this.itemHeightCache.clear();
-		this.updateFilteredIndexes();
+		await this.updateFilteredIndexes({ beforeCallback: callbacks?.beforeCallback });
 		this.resetListAndRender();
+		callbacks?.afterCallback?.();
 	}
 
 	public saveJSONToFile(): void {
@@ -136,21 +138,47 @@ class VirtualScroll {
 		URL.revokeObjectURL(url);
 	}
 
-	private updateFilteredIndexes(): void {
+	private async updateFilteredIndexes(callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
+		callbacks?.beforeCallback?.();
 		if (!this.searchEngine.getSearchValueTerm() && !this.searchEngine.getSearchKeyTerm()) {
 			this.filteredIds = new Set(this.bigJsonObject.keys());
 		} else {
-			this.filteredIds = new Set();
-			for (const [id, item] of this.bigJsonObject.entries()) {
-				const match = this.searchEngine.itemMatchesSearch(item);
-				if (match.isSearchDisabled || match.matchedKeys.size) {
-					this.filteredIds.add(id);
-				}
-			}
+			this.filteredIds = await this.processChunks(this.bigJsonObject, this.searchEngine);
 		}
 		this.filteredIdsArray = Array.from(this.filteredIds);
 		this.updateHeightTree();
+		callbacks?.afterCallback?.();
 	}
+
+	private processChunks = (bigJsonObject: JSONData, searchEngine: SearchEngine, chunk = 10_000): Promise<Set<string>> => {
+		return new Promise((resolve) => {
+			const filteredIds = new Set<string>();
+			const entries = Array.from(bigJsonObject.entries());
+			let index = 0;
+
+			function processChunk() {
+				const end = Math.min(index + chunk, entries.length);
+
+				for (let i = index; i < end; i++) {
+					const [id, item] = entries[i];
+					const match = searchEngine.itemMatchesSearch(item);
+					if (match.isSearchDisabled || match.matchedKeys.size) {
+						filteredIds.add(id);
+					}
+				}
+
+				index = end;
+
+				if (index < entries.length) {
+					requestAnimationFrame(processChunk);
+				} else {
+					resolve(filteredIds);
+				}
+			}
+
+			requestAnimationFrame(processChunk);
+		});
+	};
 
 	private updateHeightTree(): void {
 		this.heightTree = new HeightTree(this.filteredIdsArray.length);
