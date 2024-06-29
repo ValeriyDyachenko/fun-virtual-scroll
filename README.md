@@ -18,13 +18,15 @@ npm run dev
 
 ## ISSUES
 
-- <s>I used standard browser scroll which has vertical size restrictions. 
-So if you generate a very big JSON with one million cards, for example - it will work, but the browser will not show the entire list.</s>
+### To-do
+- [ ] Load custom JSON
+- [ ] Refactor to make it usable as a library
+- [ ] Add support for giant JSONs (currently tested with 2,000,000 cards, about 10,000,000 fields; it takes time for JSON initialization)
+- [ ] Add tests
 
-- <s>Performance improvements, especially with enabled search, are possible. The current version is not fully optimized.</s>
-
-- <s>Developed for chrome</s>
-
-- <s>In the FireFox during fast scrolling content are not rendered</s>
-
-- <s>In Firefox, to save the input value, Enter should be pressed or focus should be lost. Saving doesn't work immediately when scrolling.</s>
+### Completed
+- [x] Fast virtual scroll
+- [x] Fake scrollbar without size restrictions
+- [x] Random JSON generator
+- [x] Optimizations, abort controllers, non-blocking JSON generation and search, Travolta
+- [x] Tested in Chrome and Firefox (works better in Chrome)
