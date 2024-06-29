@@ -5,6 +5,8 @@ import { HTMLInputGenerator, InputGenerator } from './InputGenerator.ts';
 import { HeightTree } from './HeightTree.ts';
 
 class VirtualScroll {
+	private abortController: AbortController | null = null;
+
 	private bigJsonObject: JSONData = new Map();
 
 	private filteredIds = new Set<string>();
@@ -81,27 +83,19 @@ class VirtualScroll {
 		this.setupVirtualScroll();
 	}
 
-	private setupVirtualScroll(): void {
-		this.vList.tabIndex = 0;
-		this.vList.style.overflow = 'hidden';
-		this.virtualScrollbar.addEventListener('mousedown', this.startDragging);
-		this.vList.addEventListener('wheel', this.handleWheel, { passive: false });
-		this.vList.addEventListener('touchstart', this.handleTouchStart, { passive: false });
-		this.vList.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-		window.addEventListener('keydown', this.handleKeyDown);
-		this.vList.addEventListener('scroll', this.handleScroll);
-
-		// Firefox
-		this.vList.addEventListener('DOMMouseScroll', this.handleFirefoxScroll, { passive: false });
-	}
-
 	public async generateRandomData(count: number, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		callbacks?.beforeCallback?.();
+		this.createNewAbortController();
 		this.destroy();
 		this.setScrollListeners();
 		this.setupVirtualScroll();
-		this.bigJsonObject = await this.jsonGenerator.generateRandomData(count);
-		await this.updateFilteredIndexes();
+
+		this.bigJsonObject = await this.jsonGenerator.generateRandomData(count, this.abortController?.signal);
+		if (this.abortController?.signal.aborted) return;
+
+		await this.updateFilteredIndexes(this.abortController?.signal);
+		if (this.abortController?.signal.aborted) return;
+
 		this.updateVirtualScroll();
 		this.renderList('up', 0);
 		callbacks?.afterCallback?.();
@@ -109,18 +103,26 @@ class VirtualScroll {
 
 	public async searchByKey(key: string, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		callbacks?.beforeCallback?.();
+		this.createNewAbortController();
 		this.searchEngine.searchByKey(key);
 		this.itemHeightCache.clear();
-		await this.updateFilteredIndexes();
+
+		await this.updateFilteredIndexes(this.abortController?.signal);
+		if (this.abortController?.signal.aborted) return;
+
 		this.resetListAndRender();
 		callbacks?.afterCallback?.();
 	}
 
 	public async searchByValue(value: string, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		callbacks?.beforeCallback?.();
+		this.createNewAbortController();
 		this.searchEngine.searchByValue(value);
 		this.itemHeightCache.clear();
-		await this.updateFilteredIndexes();
+
+		await this.updateFilteredIndexes(this.abortController?.signal);
+		if (this.abortController?.signal.aborted) return;
+
 		this.resetListAndRender();
 		callbacks?.afterCallback?.();
 	}
@@ -141,25 +143,39 @@ class VirtualScroll {
 		URL.revokeObjectURL(url);
 	}
 
-	private async updateFilteredIndexes(callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
-		callbacks?.beforeCallback?.();
-		if (!this.searchEngine.getSearchValueTerm() && !this.searchEngine.getSearchKeyTerm()) {
-			this.filteredIds = new Set(this.bigJsonObject.keys());
-		} else {
-			this.filteredIds = await this.processChunks(this.bigJsonObject, this.searchEngine);
+	private createNewAbortController(): void {
+		if (this.abortController) {
+			this.abortController.abort();
 		}
-		this.filteredIdsArray = Array.from(this.filteredIds);
-		await this.updateHeightTree();
-		callbacks?.afterCallback?.();
+		this.abortController = new AbortController();
 	}
 
-	private processChunks = (bigJsonObject: JSONData, searchEngine: SearchEngine, chunk = 10_000): Promise<Set<string>> => {
+	private setupVirtualScroll(): void {
+		this.vList.tabIndex = 0;
+		this.vList.style.overflow = 'hidden';
+		this.virtualScrollbar.addEventListener('mousedown', this.startDragging);
+		this.vList.addEventListener('wheel', this.handleWheel, { passive: false });
+		this.vList.addEventListener('touchstart', this.handleTouchStart, { passive: false });
+		this.vList.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+		window.addEventListener('keydown', this.handleKeyDown);
+		this.vList.addEventListener('scroll', this.handleScroll);
+
+		// Firefox
+		this.vList.addEventListener('DOMMouseScroll', this.handleFirefoxScroll, { passive: false });
+	}
+
+	private processChunks = (bigJsonObject: JSONData, searchEngine: SearchEngine, signal: AbortSignal | undefined, chunk = 10_000): Promise<Set<string>> => {
 		return new Promise((resolve) => {
 			const filteredIds = new Set<string>();
 			const entries = Array.from(bigJsonObject.entries());
 			let index = 0;
 
 			function processChunk() {
+				if (signal?.aborted) {
+					resolve(filteredIds);
+					return;
+				}
+
 				const end = Math.min(index + chunk, entries.length);
 
 				for (let i = index; i < end; i++) {
@@ -183,13 +199,36 @@ class VirtualScroll {
 		});
 	};
 
-	private updateHeightTree(): Promise<void> {
+	private async updateFilteredIndexes(signal: AbortSignal | undefined, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
+		callbacks?.beforeCallback?.();
+		if (!this.searchEngine.getSearchValueTerm() && !this.searchEngine.getSearchKeyTerm()) {
+			// for the super large JSON over 5_000_000_000 fields we may make it a bit faster
+			// with chunks and requestAnimationFrame like implemented in the else block
+			this.filteredIds = new Set(this.bigJsonObject.keys());
+		} else {
+			this.filteredIds = await this.processChunks(this.bigJsonObject, this.searchEngine, signal);
+		}
+		if (signal?.aborted) return;
+
+		this.filteredIdsArray = Array.from(this.filteredIds);
+		await this.updateHeightTree(signal);
+		if (signal?.aborted) return;
+
+		callbacks?.afterCallback?.();
+	}
+
+	private updateHeightTree(signal: AbortSignal | undefined): Promise<void> {
 		return new Promise<void>((resolve) => {
 			this.heightTree = new HeightTree(this.filteredIdsArray.length);
 			let index = 0;
 			const chunkSize = 10_000;
 
 			const processChunk = () => {
+				if (signal?.aborted) {
+					resolve();
+					return;
+				}
+
 				const endIndex = Math.min(index + chunkSize, this.filteredIdsArray.length);
 
 				for (; index < endIndex; index++) {
