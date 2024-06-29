@@ -96,10 +96,11 @@ class VirtualScroll {
 	}
 
 	public async generateRandomData(count: number, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
+		callbacks?.beforeCallback?.();
 		this.destroy();
 		this.setScrollListeners();
 		this.setupVirtualScroll();
-		this.bigJsonObject = await this.jsonGenerator.generateRandomData(count, { beforeCallback: callbacks?.beforeCallback });
+		this.bigJsonObject = await this.jsonGenerator.generateRandomData(count);
 		await this.updateFilteredIndexes();
 		this.updateVirtualScroll();
 		this.renderList('up', 0);
@@ -107,17 +108,19 @@ class VirtualScroll {
 	}
 
 	public async searchByKey(key: string, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
+		callbacks?.beforeCallback?.();
 		this.searchEngine.searchByKey(key);
 		this.itemHeightCache.clear();
-		await this.updateFilteredIndexes({ beforeCallback: callbacks?.beforeCallback });
+		await this.updateFilteredIndexes();
 		this.resetListAndRender();
 		callbacks?.afterCallback?.();
 	}
 
 	public async searchByValue(value: string, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
+		callbacks?.beforeCallback?.();
 		this.searchEngine.searchByValue(value);
 		this.itemHeightCache.clear();
-		await this.updateFilteredIndexes({ beforeCallback: callbacks?.beforeCallback });
+		await this.updateFilteredIndexes();
 		this.resetListAndRender();
 		callbacks?.afterCallback?.();
 	}
@@ -146,7 +149,7 @@ class VirtualScroll {
 			this.filteredIds = await this.processChunks(this.bigJsonObject, this.searchEngine);
 		}
 		this.filteredIdsArray = Array.from(this.filteredIds);
-		this.updateHeightTree();
+		await this.updateHeightTree();
 		callbacks?.afterCallback?.();
 	}
 
@@ -180,15 +183,32 @@ class VirtualScroll {
 		});
 	};
 
-	private updateHeightTree(): void {
-		this.heightTree = new HeightTree(this.filteredIdsArray.length);
-		for (let i = 0; i < this.filteredIdsArray.length; i += 1) {
-			const itemId = this.filteredIdsArray[i];
-			const item = this.bigJsonObject.get(itemId)!;
-			const height = this.getItemHeight(item, itemId);
-			this.heightTree.update(i, height);
-		}
-		this.updateListContainerHeight();
+	private updateHeightTree(): Promise<void> {
+		return new Promise<void>((resolve) => {
+			this.heightTree = new HeightTree(this.filteredIdsArray.length);
+			let index = 0;
+			const chunkSize = 10_000;
+
+			const processChunk = () => {
+				const endIndex = Math.min(index + chunkSize, this.filteredIdsArray.length);
+
+				for (; index < endIndex; index++) {
+					const itemId = this.filteredIdsArray[index];
+					const item = this.bigJsonObject.get(itemId)!;
+					const height = this.getItemHeight(item, itemId);
+					this.heightTree.update(index, height);
+				}
+
+				if (index < this.filteredIdsArray.length) {
+					requestAnimationFrame(processChunk);
+				} else {
+					this.updateListContainerHeight();
+					resolve();
+				}
+			};
+
+			requestAnimationFrame(processChunk);
+		});
 	}
 
 	private updateListContainerHeight(): void {
