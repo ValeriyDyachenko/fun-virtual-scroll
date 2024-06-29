@@ -85,16 +85,16 @@ class VirtualScroll {
 
 	public async generateRandomData(count: number, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		callbacks?.beforeCallback?.();
-		this.createNewAbortController();
+		const abortController = this.updateAbortController();
 		this.destroy();
 		this.setScrollListeners();
 		this.setupVirtualScroll();
 
-		this.bigJsonObject = await this.jsonGenerator.generateRandomData(count, this.abortController?.signal);
-		if (this.abortController?.signal.aborted) return;
+		this.bigJsonObject = await this.jsonGenerator.generateRandomData(count, abortController.signal);
+		if (abortController.signal.aborted) return;
 
-		await this.updateFilteredIndexes(this.abortController?.signal);
-		if (this.abortController?.signal.aborted) return;
+		await this.updateFilteredIndexes(abortController.signal);
+		if (abortController.signal.aborted) return;
 
 		this.updateVirtualScroll();
 		this.renderList('up', 0);
@@ -103,12 +103,12 @@ class VirtualScroll {
 
 	public async searchByKey(key: string, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		callbacks?.beforeCallback?.();
-		this.createNewAbortController();
+		const abortController = this.updateAbortController();
 		this.searchEngine.searchByKey(key);
 		this.itemHeightCache.clear();
 
-		await this.updateFilteredIndexes(this.abortController?.signal);
-		if (this.abortController?.signal.aborted) return;
+		await this.updateFilteredIndexes(abortController.signal);
+		if (abortController.signal.aborted) return;
 
 		this.resetListAndRender();
 		callbacks?.afterCallback?.();
@@ -116,12 +116,12 @@ class VirtualScroll {
 
 	public async searchByValue(value: string, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		callbacks?.beforeCallback?.();
-		this.createNewAbortController();
+		const abortController = this.updateAbortController();
 		this.searchEngine.searchByValue(value);
 		this.itemHeightCache.clear();
 
-		await this.updateFilteredIndexes(this.abortController?.signal);
-		if (this.abortController?.signal.aborted) return;
+		await this.updateFilteredIndexes(abortController.signal);
+		if (abortController.signal.aborted) return;
 
 		this.resetListAndRender();
 		callbacks?.afterCallback?.();
@@ -143,11 +143,13 @@ class VirtualScroll {
 		URL.revokeObjectURL(url);
 	}
 
-	private createNewAbortController(): void {
+	private updateAbortController(): AbortController {
 		if (this.abortController) {
 			this.abortController.abort();
 		}
-		this.abortController = new AbortController();
+		const abortController = new AbortController();
+		this.abortController = abortController;
+		return abortController;
 	}
 
 	private setupVirtualScroll(): void {
@@ -164,21 +166,19 @@ class VirtualScroll {
 		this.vList.addEventListener('DOMMouseScroll', this.handleFirefoxScroll, { passive: false });
 	}
 
-	private processChunks = (bigJsonObject: JSONData, searchEngine: SearchEngine, signal: AbortSignal | undefined, chunk = 10_000): Promise<Set<string>> => {
+	private processChunks = (bigJsonObject: JSONData, searchEngine: SearchEngine, signal: AbortSignal, chunk = 10_000): Promise<Set<string>> => {
 		return new Promise((resolve) => {
 			const filteredIds = new Set<string>();
 			const entries = Array.from(bigJsonObject.entries());
 			let index = 0;
 
 			function processChunk() {
-				if (signal?.aborted) {
+				const end = Math.min(index + chunk, entries.length);
+				if (signal.aborted) {
 					resolve(filteredIds);
 					return;
 				}
-
-				const end = Math.min(index + chunk, entries.length);
-
-				for (let i = index; i < end; i++) {
+				for (let i = index; i < end; i += 1) {
 					const [id, item] = entries[i];
 					const match = searchEngine.itemMatchesSearch(item);
 					if (match.isSearchDisabled || match.matchedKeys.size) {
@@ -199,7 +199,7 @@ class VirtualScroll {
 		});
 	};
 
-	private async updateFilteredIndexes(signal: AbortSignal | undefined, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
+	private async updateFilteredIndexes(signal: AbortSignal, callbacks: { beforeCallback?: () => void, afterCallback?: () => void} = {}): Promise<void> {
 		callbacks?.beforeCallback?.();
 		if (!this.searchEngine.getSearchValueTerm() && !this.searchEngine.getSearchKeyTerm()) {
 			// for the super large JSON over 5_000_000_000 fields we may make it a bit faster
@@ -208,30 +208,28 @@ class VirtualScroll {
 		} else {
 			this.filteredIds = await this.processChunks(this.bigJsonObject, this.searchEngine, signal);
 		}
-		if (signal?.aborted) return;
+		if (signal.aborted) return;
 
 		this.filteredIdsArray = Array.from(this.filteredIds);
 		await this.updateHeightTree(signal);
-		if (signal?.aborted) return;
+		if (signal.aborted) return;
 
 		callbacks?.afterCallback?.();
 	}
 
-	private updateHeightTree(signal: AbortSignal | undefined): Promise<void> {
+	private updateHeightTree(signal: AbortSignal): Promise<void> {
 		return new Promise<void>((resolve) => {
 			this.heightTree = new HeightTree(this.filteredIdsArray.length);
 			let index = 0;
 			const chunkSize = 10_000;
 
 			const processChunk = () => {
-				if (signal?.aborted) {
+				const endIndex = Math.min(index + chunkSize, this.filteredIdsArray.length);
+				if (signal.aborted) {
 					resolve();
 					return;
 				}
-
-				const endIndex = Math.min(index + chunkSize, this.filteredIdsArray.length);
-
-				for (; index < endIndex; index++) {
+				for (; index < endIndex; index += 1) {
 					const itemId = this.filteredIdsArray[index];
 					const item = this.bigJsonObject.get(itemId)!;
 					const height = this.getItemHeight(item, itemId);
