@@ -31,6 +31,11 @@ function App() {
 						type="number"
 						value={cardsCount}
 						onChange={e => setCardsCount(Number(e.target.value))}
+						onKeyDown={(event) => {
+							if (event.key === 'Enter' && cardsCount) {
+								generateJSONData(cardsCount);
+							}
+						}}
 					/>
 					<button
 						className="button"
