@@ -9,8 +9,6 @@ class VirtualScroll {
 
 	private bigJsonObject: JSONData = new Map();
 
-	private filteredIds = new Set<string>();
-
 	private filteredIdsArray: string[] = [];
 
 	private vList: HTMLElement;
@@ -167,9 +165,9 @@ class VirtualScroll {
 		this.vList.addEventListener('DOMMouseScroll', this.handleFirefoxScroll, { passive: false });
 	}
 
-	private processChunks = (bigJsonObject: JSONData, searchEngine: SearchEngine, signal: AbortSignal, chunk = 10_000): Promise<Set<string>> => {
+	private processChunks = (bigJsonObject: JSONData, searchEngine: SearchEngine, signal: AbortSignal, chunk = 10_000): Promise<string[]> => {
 		return new Promise((resolve) => {
-			const filteredIds = new Set<string>();
+			const filteredIds: string[] = [];
 			const entries = Array.from(bigJsonObject.entries());
 			let index = 0;
 
@@ -183,7 +181,7 @@ class VirtualScroll {
 					const [id, item] = entries[i];
 					const match = searchEngine.itemMatchesSearch(item);
 					if (match.isSearchDisabled || match.matchedKeys.size) {
-						filteredIds.add(id);
+						filteredIds.push(id);
 					}
 				}
 
@@ -205,13 +203,12 @@ class VirtualScroll {
 		if (!this.searchEngine.getSearchValueTerm() && !this.searchEngine.getSearchKeyTerm()) {
 			// for the super large JSON over 5_000_000_000 fields we may make it a bit faster
 			// with chunks and requestAnimationFrame like implemented in the else block
-			this.filteredIds = new Set(this.bigJsonObject.keys());
+			this.filteredIdsArray = [...this.bigJsonObject.keys()];
 		} else {
-			this.filteredIds = await this.processChunks(this.bigJsonObject, this.searchEngine, signal);
+			this.filteredIdsArray = await this.processChunks(this.bigJsonObject, this.searchEngine, signal);
 		}
 		if (signal.aborted) return;
 
-		this.filteredIdsArray = Array.from(this.filteredIds);
 		await this.updateHeightTree(signal);
 		if (signal.aborted) return;
 
